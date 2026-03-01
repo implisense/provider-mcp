@@ -402,7 +402,6 @@ name = "provider-mcp"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "httpx" },
     { name = "mcp", extra = ["cli"] },
     { name = "python-dotenv" },
     { name = "pyyaml" },
@@ -422,7 +421,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "httpx", specifier = ">=0.27.0" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.0.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.23" },

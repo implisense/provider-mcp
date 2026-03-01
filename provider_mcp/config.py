@@ -20,15 +20,5 @@ TERMINAL_STATE_DIR = Path(
 MONITOR_STATE_FILE = TERMINAL_STATE_DIR / "monitor_state.json"
 PIPELINE_STATE_FILE = TERMINAL_STATE_DIR / "pipeline_state.json"
 
-# stress-test-saas API
-STRESS_TEST_API_URL = os.getenv("STRESS_TEST_API_URL", "http://localhost:8080")
-
-# Timeouts
-HTTP_TIMEOUT = float(os.getenv("HTTP_TIMEOUT", "120"))  # Sekunden (SSE kann lang dauern)
-HTTP_CONNECT_TIMEOUT = float(os.getenv("HTTP_CONNECT_TIMEOUT", "5"))
-
-# Fallback: wenn stress-test-saas nicht erreichbar, Heuristik verwenden
-USE_HEURISTIC_FALLBACK = os.getenv("USE_HEURISTIC_FALLBACK", "true").lower() == "true"
-
 # Simulationsparameter
 DEFAULT_N_SIMULATIONS = int(os.getenv("DEFAULT_N_SIMULATIONS", "200"))

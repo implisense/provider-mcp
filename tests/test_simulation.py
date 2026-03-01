@@ -24,7 +24,7 @@ class TestHeuristicFallback:
         result = _heuristic_fallback("test_id", "Soja-Import aus Brasilien")
         assert result["status"] == "complete"
         assert result["run_id"] == "test_id"
-        assert result["source"] == "heuristic_fallback"
+        assert result["source"] == "heuristic"
 
     def test_high_risk_keywords(self):
         result = _heuristic_fallback("id1", "Krieg und Sanktionen und Katastrophe")
