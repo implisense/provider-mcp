@@ -18,7 +18,7 @@ mcp = FastMCP(
     "PROVIDER",
     instructions=(
         "Du bist der PROVIDER-Assistent für Versorgungssicherheitsanalysen. "
-        "PROVIDER ist ein BMBF-gefördertes Frühwarnsystem für Lieferkettenengpässe "
+        "PROVIDER ist ein BMFTR-gefördertes Frühwarnsystem für Lieferkettenengpässe "
         "außerhalb klassischer KRITIS-Sektoren. "
         "Nutze die verfügbaren Tools, um Szenarien zu analysieren, "
         "aktuelle Risikoampeln abzurufen und Unternehmensbetroffenheiten zu bewerten."

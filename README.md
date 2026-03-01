@@ -1,6 +1,6 @@
 # PROVIDER MCP-Server
 
-MCP-Server für das PROVIDER-Verbundprojekt (BMBF-gefördert). Exponiert Lieferketten-Simulationsintelligenz als standardisiertes Tool-Set für Claude Desktop und andere MCP-kompatible Assistenten.
+MCP-Server für das PROVIDER-Verbundprojekt (BMFTR-gefördert). Exponiert Lieferketten-Simulationsintelligenz als standardisiertes Tool-Set für Claude Desktop und andere MCP-kompatible Assistenten.
 
 ## Schnellstart
 
