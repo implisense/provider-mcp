@@ -14,8 +14,9 @@ Dieser MCP-Server erfüllt die **AP7-Anforderungen** (LLM-basierte Auswertung, M
 
 ```bash
 # Installation
-cd 04_Apps/provider-mcp
-uv sync           # Abhängigkeiten installieren
+git clone https://github.com/implisense/provider-mcp
+cd provider-mcp
+uv sync
 
 # Server starten (stdio, Standard für Claude Desktop)
 uv run provider-mcp
@@ -25,12 +26,9 @@ uv run mcp dev provider_mcp/server.py
 
 # Tests ausführen
 uv run pytest tests/ -v
-
-# Mit API-Key-Konfiguration
-ANTHROPIC_API_KEY=sk-ant-... uv run provider-mcp
 ```
 
-**Wichtig:** Befehle von `04_Apps/provider-mcp/` aus ausführen.
+**Wichtig:** Befehle aus dem `provider-mcp/`-Verzeichnis ausführen.
 
 ## Architektur
 
@@ -38,18 +36,18 @@ ANTHROPIC_API_KEY=sk-ant-... uv run provider-mcp
 Claude Desktop / Enterprise-Chatbot
            |
     [PROVIDER MCP-Server]  ← stdio Transport
-     /          |          \
-PDL-Dateien   terminal     stress-test-saas
-(direkt)      state files  (REST API, Port 8080)
+          /        \
+   PDL-Dateien   Terminal State-Dateien
+   (direkt)      (monitor_state.json)
 ```
 
 ```
 provider-mcp/
 ├── CLAUDE.md
-├── pyproject.toml               # Python 3.10+, mcp[cli], httpx, pyyaml
+├── pyproject.toml               # Python 3.10+, mcp[cli], pyyaml
 ├── provider_mcp/
 │   ├── server.py                # Haupt-MCP-Server, alle @mcp.tool() Definitionen
-│   ├── config.py                # Pfade, Ports, Umgebungsvariablen
+│   ├── config.py                # Pfade und Umgebungsvariablen
 │   ├── tools/
 │   │   ├── scenarios.py         # list_scenarios, get_scenario
 │   │   ├── alerts.py            # get_current_alerts
@@ -58,7 +56,7 @@ provider-mcp/
 │   └── backends/
 │       ├── pdl_reader.py        # Liest PDL-YAML-Dateien
 │       ├── terminal_reader.py   # Liest terminal state files
-│       └── stresstest_client.py # httpx-Client für stress-test-saas
+│       └── stresstest_client.py # Regelbasierte Heuristik
 └── tests/
     ├── test_scenarios.py
     ├── test_alerts.py
@@ -72,9 +70,9 @@ provider-mcp/
 | `list_scenarios()` | Alle 9 Szenarien mit Metadaten | PDL-Dateien |
 | `get_scenario(id)` | Vollständiges PDL-Szenario | PDL-Dateien |
 | `get_current_alerts()` | Aktuelle Risikoampeln aus Monitoring | State-Dateien |
-| `run_stress_test(description, ...)` | Freitext → Monte-Carlo → Risk Score | stress-test-saas |
+| `run_stress_test(description, ...)` | Freitext → Heuristik → Risk Score | Heuristik |
 | `get_simulation_results(run_id)` | Gecachtes Ergebnis abrufen | In-Memory-Cache |
-| `assess_company_exposure(sector, commodities)` | Betroffenheitsanalyse | PDL + stress-test-saas |
+| `assess_company_exposure(sector, commodities)` | Betroffenheitsanalyse | PDL + Heuristik |
 
 ## MCP-Resources
 
@@ -85,23 +83,15 @@ provider-mcp/
 
 - `analyze_supply_chain_risk` — Vordefinierter Analyse-Workflow
 
-## Datenzugriff
-
-- **PDL-Szenarien:** `../../06_Szenarien/scenarios/*.pdl.yaml` (relativ zum Repo-Root)
-- **Alert-Status:** `../terminal/monitor_state.json` + `../terminal/pipeline_state.json`
-- **Simulation:** HTTP POST `http://localhost:8080/api/analyze` (SSE-Stream)
-- **Fallback:** Wenn stress-test-saas nicht läuft → regelbasierte Heuristik
-
 ## Konfiguration (Umgebungsvariablen)
 
-| Variable | Standard | Beschreibung |
-|---|---|---|
-| `PDL_SCENARIOS_DIR` | `../../06_Szenarien/scenarios` | Pfad zu PDL-YAML-Dateien |
-| `TERMINAL_STATE_DIR` | `../terminal` | Pfad zu State-Dateien |
-| `STRESS_TEST_API_URL` | `http://localhost:8080` | stress-test-saas URL |
-| `HTTP_TIMEOUT` | `120` | Timeout für SSE-Streaming (Sekunden) |
-| `USE_HEURISTIC_FALLBACK` | `true` | Heuristik wenn API nicht erreichbar |
-| `DEFAULT_N_SIMULATIONS` | `200` | Monte-Carlo-Läufe Standard |
+| Variable | Beschreibung |
+|---|---|
+| `PDL_SCENARIOS_DIR` | Pfad zu PDL-YAML-Dateien (Standard: automatisch ermittelt relativ zu diesem Repo) |
+| `TERMINAL_STATE_DIR` | Pfad zu `monitor_state.json` / `pipeline_state.json` (Standard: automatisch) |
+| `DEFAULT_N_SIMULATIONS` | Anzahl Heuristik-Läufe (Standard: 200) |
+
+Die Standardpfade werden **automatisch relativ zum Repo-Root** berechnet und müssen nur gesetzt werden, wenn die Verzeichnisstruktur abweicht.
 
 ## Claude Desktop Integration
 
@@ -111,28 +101,28 @@ provider-mcp/
 {
   "mcpServers": {
     "provider": {
-      "command": "uv",
+      "command": "/pfad/zu/uv",
       "args": [
         "run",
         "--directory",
-        "/Users/DEIN_USER/Projekte/Forschung/PROVIDER/04_Apps/provider-mcp",
+        "/pfad/zu/provider-mcp",
         "provider-mcp"
       ],
       "env": {
-        "STRESS_TEST_API_URL": "http://localhost:8080",
-        "PDL_SCENARIOS_DIR": "/Users/DEIN_USER/Projekte/Forschung/PROVIDER/06_Szenarien/scenarios",
-        "TERMINAL_STATE_DIR": "/Users/DEIN_USER/Projekte/Forschung/PROVIDER/04_Apps/terminal"
+        "PDL_SCENARIOS_DIR": "/pfad/zu/pdl-szenarien",
+        "TERMINAL_STATE_DIR": "/pfad/zu/terminal-state"
       }
     }
   }
 }
 ```
 
+**Tipp:** `uv`-Pfad ermitteln mit `which uv` — Claude Desktop hat einen eingeschränkten PATH und benötigt den absoluten Pfad.
+
 ## Abhängigkeiten
 
 ```
 mcp[cli]>=1.0.0        # MCP-Framework (FastMCP)
-httpx>=0.27.0          # Async HTTP-Client für stress-test-saas
 pyyaml>=6.0            # PDL-YAML parsen
 python-dotenv>=1.0.0   # .env-Datei Unterstützung
 ```
@@ -145,14 +135,12 @@ uv run pytest tests/test_scenarios.py -v   # Nur Szenario-Tests
 uv run pytest tests/ -k "heuristic"  # Nur Heuristik-Tests
 ```
 
-Alle Tests sind mit Mock-Backends und ohne laufende Services ausführbar.
+Alle Tests sind ohne laufende externe Services ausführbar.
 
-## Fehlerbehandlung & Fallbacks
+## Fehlerbehandlung
 
-- **stress-test-saas nicht erreichbar:** Automatischer Fallback auf regelbasierte Heuristik
 - **PDL-Dateien fehlen:** `list_scenarios()` gibt leere Liste + Warnung zurück
 - **monitor_state.json fehlt:** `get_current_alerts()` gibt `data_available: False` zurück
-- **Timeout SSE-Stream:** Nach `HTTP_TIMEOUT` Sekunden → Fehler-Response
 
 ## Verifikations-Checkliste
 
@@ -160,6 +148,6 @@ Alle Tests sind mit Mock-Backends und ohne laufende Services ausführbar.
 2. `uv run mcp dev provider_mcp/server.py` → MCP Inspector zeigt 6 Tools
 3. `list_scenarios()` → 9 Szenarien (Soja, Halbleiter, Pharma, ...)
 4. `get_scenario("s1-soja")` → vollständiges PDL-Objekt
-5. `get_current_alerts()` → gibt State aus `monitor_state.json` (oder `data_available: False`)
-6. `run_stress_test("Soja-Import aus Brasilien")` → Risk Score (Heuristik oder echte Simulation)
+5. `get_current_alerts()` → State aus `monitor_state.json` (oder `data_available: False`)
+6. `run_stress_test("Soja-Import aus Brasilien")` → Risk Score via Heuristik
 7. `assess_company_exposure("Landwirtschaft", ["Soja"])` → Betroffenheitsanalyse
